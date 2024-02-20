@@ -7,7 +7,7 @@ def restaurants_per_cuisine():
     db = client['Restaurant']
     collection = db['ds4300']
 
-    # Group restaurants by cuisine and count them
+    # Group restaurants by cuisine and count
     pipeline = [
         {"$group": {"_id": "$cuisine", "count": {"$sum": 1}}},
         {"$sort": {"count": -1}},
@@ -84,43 +84,52 @@ if __name__ == "__main__":
     plot_health_inspections_per_year()
 
 def borough_avg_score(borough_name):
-    # Connect to the MongoDB database
-    client = MongoClient('mongodb://localhost:27017/')
-    db = client['Restaurant']
-    collection = db['ds4300']
+    try:
+        # Connect to MongoDB database
+        client = MongoClient('mongodb://localhost:27017/')
+        db = client['Restaurant']
+        collection = db['ds4300']
 
-    pipeline = [
-        {"$match": {"borough": borough_name}},  # Match documents for the specified borough
-        {"$unwind": "$grades"},  # Deconstruct the grades array
-        {"$group": {
-            "_id": "$restaurant_id",  # Group by restaurant_id
-            "scores": {"$push": "$grades.score"}  # Collect scores for each restaurant
-        }}
-    ]
+        pipeline = [
+            {"$match": {"borough": borough_name}},  # Match documents for the specified borough
+            {"$unwind": "$grades"},  # Deconstruct the grades array
+            {"$group": {
+                "_id": "$restaurant_id",
+                "scores": {"$push": "$grades.score"}
+            }}
+        ]
 
-    result = list(collection.food.aggregate(pipeline))
-    if result:
-        scores_per_borough = [score for restaurant in result for score in restaurant["scores"]]
-        return scores_per_borough
-    else:
+        result = list(collection.aggregate(pipeline))
+        if result:
+            scores_per_borough = [score for restaurant in result for score in restaurant["scores"] if score is not None]
+            return scores_per_borough
+        else:
+            return []
+    except Exception as e:
+        print("An error occurred:", e)
         return []
 
-def plot_average_score_per_borough():
-    borough_names = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"]
-    all_scores = []
 
-    for borough_name in borough_names:
-        scores = borough_avg_score(borough_name)
-        all_scores.append(scores)
+def plot_borough_avg_score():
+    try:
+        borough_names = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"]
+        all_scores = []
 
-    plt.figure(figsize=(10, 6))
-    plt.boxplot(all_scores, labels=borough_names)
-    plt.title('Scores Distribution by Borough')
-    plt.xlabel('Borough')
-    plt.ylabel('Score')
-    plt.grid(True)
-    plt.show()
+        for borough_name in borough_names:
+            scores = borough_avg_score(borough_name)
+            all_scores.append(scores)
 
-# Example usage
+        plt.figure(figsize=(10, 6))
+        plt.boxplot(all_scores, labels=borough_names)
+        plt.title('Scores Distribution by Borough')
+        plt.xlabel('Borough')
+        plt.ylabel('Score')
+        plt.grid(True)
+        plt.show()
+    except Exception as e:
+        print("An error occurred while plotting:", e)
+
+# call function to plot
 if __name__ == "__main__":
-    plot_average_score_per_borough()
+    plot_borough_avg_score()
+
