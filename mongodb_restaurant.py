@@ -1,5 +1,6 @@
 # import pymongo
-# import folium
+import folium
+import pymongo
 
 
 class RestaurantQueries:
@@ -47,6 +48,10 @@ class RestaurantQueries:
         """
         Find restaurants within 5 miles of a specified location.
         """
+        client = pymongo.MongoClient("mongodb://localhost:27017/")
+        db = client["Restaurant"]
+        collection = db["restaurants"]
+        collection.create_index([("address.coord", "2dsphere")])
         pipeline = [
             {"$geoNear": {
                 "near": {"type": "Point", "coordinates": [lon, lat]},  # Central coordinates
@@ -81,20 +86,8 @@ class RestaurantQueries:
             lon, lat = restaurant["address"]["coord"]
             marker_icon = folium.Icon(color='red', icon_size=(15, 15), shadow_size=(0, 0))
             circle_icon = folium.CircleMarker(location=[lat, lon],
-                                               radius=3, color='red',
-                                               fill=True, fill_color='red',
-                                               fill_opacity=.6,
-                                               tooltip=name).add_to(mymap)
+                                              radius=3, color='red',
+                                              fill=True, fill_color='red',
+                                              fill_opacity=.6,
+                                              tooltip=name).add_to(mymap)
         return mymap
-
-
-# if __name__ == "__main__":
-#     client = pymongo.MongoClient("mongodb://localhost:27017/")
-#     db = client["restaurant_db"]
-#     collection = db["mongo_data"]
-#     restaurant_queries = RestaurantQueries(collection)
-#     borough = "Manhattan"
-#     print("Number of restaurants in", borough, ":", restaurant_queries.num_restaurants(borough))
-#     print("Restaurants with lowest average score in", borough, ":", list(restaurant_queries.lowest_avg_score(borough)))
-#     print("Restaurants within 5 miles of a specified location:", list(restaurant_queries.distance_restaurants(-73.985428, 40.748817)))
-#     restaurant_queries.map_restaurants(borough).save("map_restaurants.html")
