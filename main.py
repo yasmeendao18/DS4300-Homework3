@@ -68,23 +68,31 @@ def m_query_test(db):
 
 
 def e_query_test(collection):
+    """
+    Queries 1,2,10
+    Map of restaurants in each borough.
+    """
+    
     restaurant_queries = RestaurantQueries(collection)
     borough_1 = "Manhattan"
     borough_2 = "Bronx"
+    
+    # Number of restaurants in Manhattan
     print("Number of restaurants in", borough_1, ":", restaurant_queries.num_restaurants(borough_1))
-
+    
+    # Restaurant with lowest average score in the Bronx
     print("Restaurants with lowest average score in", borough_2, ":",
           list(restaurant_queries.lowest_avg_score(borough_2)))
 
-    # Restaurants within 5 miles of a specified location
-    lon, lat = -73.985428, 40.748817
+    # Restaurants within 5 miles of a the Empire State Building location
+    lon, lat = -73.985428, 40.748817 # Coordinates of the Empire State Building
     nearby_restaurants = restaurant_queries.distance_restaurants(lon, lat)
     print("Restaurants within 5 miles of the specified location:")
     for i, restaurant in enumerate(nearby_restaurants):
         if i >= 10:
             break
         print(restaurant)
-    # map the restaurants
+    # Map the restaurants for each selected borough
     restaurant_queries.map_restaurants(borough_1).save("map_restaurants.html")
     restaurant_queries.map_restaurants(borough_2).save("map_restaurants2.html")
 
